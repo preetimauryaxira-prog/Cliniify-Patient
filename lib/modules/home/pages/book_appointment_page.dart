@@ -31,7 +31,6 @@ class _BookAppointmentPageState extends ConsumerState<BookAppointmentPage> {
         "scheduled_date": DateFormat('yyyy-MM-dd').format(_selectedDate!),
         "scheduled_time": "${_selectedTime!.hour}:${_selectedTime!.minute}:00",
         "desc": _reasonController.text.trim(),
-        // In production, add Selected Doctor ID and Selected Procedure ID based on your endpoints
       };
 
       await ref.read(patientApptServiceProvider).bookAppointment(reqData);

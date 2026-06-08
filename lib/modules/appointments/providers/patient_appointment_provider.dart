@@ -7,7 +7,6 @@ final patientApptServiceProvider = Provider<PatientAppointmentService>((ref) {
   return PatientAppointmentService(dioClient);
 });
 
-// Provider to fetch all appointments
 final myAppointmentsProvider = FutureProvider.autoDispose<List<dynamic>>((ref) async {
   final service = ref.read(patientApptServiceProvider);
   return await service.getMyAppointments();

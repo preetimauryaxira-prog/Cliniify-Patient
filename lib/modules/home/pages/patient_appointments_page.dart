@@ -13,51 +13,38 @@ class PatientAppointmentsPage extends ConsumerWidget {
     final apptsAsync = ref.watch(myAppointmentsProvider);
 
     return Container(
-      decoration: BoxDecoration(gradient: AppTheme.globalBackgroundGradient),
+      decoration: BoxDecoration(
+        gradient: AppTheme.globalBackgroundGradient,
+      ),
       child: SafeArea(
         child: Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.all(20),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text("My Appointments", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColor.darkBlue)),
-                  IconButton(
-                    onPressed: () => Navigator.pushNamed(context, BookAppointmentPage.routerName),
-                    icon: const Icon(Icons.add_circle_outline_rounded, color: AppColor.green, size: 28),
-                  )
-                ],
-              ),
-            ),
+            _header(context),
+
             Expanded(
               child: apptsAsync.when(
                 data: (appts) {
                   if (appts.isEmpty) {
-                    return const Center(child: Text("No appointments found", style: TextStyle(color: AppColor.grey)));
+                    return _emptyState();
                   }
+
                   return RefreshIndicator(
-                    onRefresh: () async => ref.refresh(myAppointmentsProvider.future),
+                    onRefresh: () async =>
+                        ref.refresh(myAppointmentsProvider.future),
                     color: AppColor.green,
                     child: ListView.builder(
-                      physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      physics: const AlwaysScrollableScrollPhysics(
+                          parent: BouncingScrollPhysics()),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 10),
                       itemCount: appts.length,
-                      itemBuilder: (c, i) => _buildApptCard(c, appts[i]),
+                      itemBuilder: (c, i) =>
+                          _buildApptCard(c, appts[i]),
                     ),
                   );
                 },
-                loading: () => const Center(child: CircularProgressIndicator(color: AppColor.green)),
-                error: (e, stack) => Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(20),
-                    child: Text(
-                      e.toString(), 
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(color: AppColor.red),
-                    ),
-                  ),
-                ),
+                loading: () => _loadingState(),
+                error: (e, stack) => _errorState(e),
               ),
             ),
           ],
@@ -66,81 +53,268 @@ class PatientAppointmentsPage extends ConsumerWidget {
     );
   }
 
+  // ================= HEADER =================
+  Widget _header(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          const Text(
+            "My Appointments",
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.w700,
+              color: AppColor.darkBlue,
+            ),
+          ),
+          InkWell(
+            borderRadius: BorderRadius.circular(50),
+            onTap: () =>
+                Navigator.pushNamed(context, BookAppointmentPage.routerName),
+            child: Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: AppColor.green.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.add, color: AppColor.green, size: 26),
+            ),
+          )
+        ],
+      ),
+    );
+  }
+
+  // ================= EMPTY =================
+  Widget _emptyState() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(30),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.calendar_month,
+                size: 60, color: AppColor.grey.withValues(alpha: 0.5)),
+            const SizedBox(height: 16),
+            const Text(
+              "No Appointments Yet",
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: AppColor.darkBlue,
+              ),
+            ),
+            const SizedBox(height: 6),
+            const Text(
+              "Book your first appointment and stay on track with your health.",
+              textAlign: TextAlign.center,
+              style: TextStyle(color: AppColor.grey),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ================= LOADING =================
+  Widget _loadingState() {
+    return const Center(
+      child: CircularProgressIndicator(color: AppColor.green),
+    );
+  }
+
+  // ================= ERROR =================
+  Widget _errorState(dynamic e) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Text(
+          e.toString(),
+          textAlign: TextAlign.center,
+          style: const TextStyle(color: AppColor.red),
+        ),
+      ),
+    );
+  }
+
+  // ================= CARD =================
   Widget _buildApptCard(BuildContext context, dynamic appt) {
     final date = DateTime.parse(appt['scheduled_date']);
-    final isUpcoming = date.isAfter(DateTime.now()) && appt['status'] != 'Cancelled';
-    
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColor.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: isUpcoming ? AppColor.green.withValues(alpha: 0.3) : Colors.transparent),
-        boxShadow: [BoxShadow(color: AppColor.darkBlue.withValues(alpha: 0.05), blurRadius: 10)],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(DateFormat('EEE, MMM d, yyyy').format(date), style: const TextStyle(fontWeight: FontWeight.bold, color: AppColor.darkBlue)),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: appt['status'] == 'Cancelled' ? AppColor.snackBgRed : (isUpcoming ? AppColor.snackBgGreen : AppColor.lightGrey),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  appt['status'],
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: appt['status'] == 'Cancelled' ? AppColor.red : (isUpcoming ? AppColor.snackGreen : AppColor.grey)),
-                ),
-              )
-            ],
+    final isUpcoming =
+        date.isAfter(DateTime.now()) && appt['status'] != 'Cancelled';
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(18),
+      onTap: () {},
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: AppColor.white,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: isUpcoming
+                ? AppColor.green.withValues(alpha: 0.25)
+                : Colors.transparent,
           ),
-          const Divider(height: 24, color: AppColor.lightGrey),
-          Row(
-            children: [
-              const Icon(Icons.person, color: AppColor.green),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(appt['doctor']['full_name'], style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColor.darkBlue)),
-                    Text(appt['procedure']['name'], style: const TextStyle(fontSize: 13, color: AppColor.grey)),
-                  ],
-                ),
-              ),
-              Text(appt['scheduled_time'], style: const TextStyle(fontWeight: FontWeight.bold, color: AppColor.darkBlue)),
-            ],
-          ),
-          // NEW: Actions for Upcoming Appointments
-          if (isUpcoming) ...[
-            const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                TextButton(
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Reschedule feature requested.")));
-                    // TODO: Route to BookAppointmentPage with edit parameters
-                  },
-                  child: const Text("Reschedule", style: TextStyle(color: AppColor.darkBlue, fontWeight: FontWeight.bold)),
-                ),
-                const SizedBox(width: 8),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(backgroundColor: AppColor.red, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Cancellation request sent.")));
-                  },
-                  child: const Text("Cancel", style: TextStyle(color: AppColor.white, fontWeight: FontWeight.bold)),
-                )
-              ],
+          boxShadow: [
+            BoxShadow(
+              color: AppColor.darkBlue.withValues(alpha: 0.06),
+              blurRadius: 12,
+              offset: const Offset(0, 6),
             )
-          ]
-        ],
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // TOP ROW
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  DateFormat('EEE, MMM d, yyyy').format(date),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: AppColor.darkBlue,
+                  ),
+                ),
+                _statusBadge(appt['status'], isUpcoming),
+              ],
+            ),
+
+            const SizedBox(height: 14),
+
+            // DOCTOR INFO
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: AppColor.green.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(Icons.person, color: AppColor.green),
+                ),
+                const SizedBox(width: 12),
+
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        appt['doctor']['full_name'],
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: AppColor.darkBlue,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        appt['procedure']['name'],
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: AppColor.grey,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                Text(
+                  appt['scheduled_time'],
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: AppColor.darkBlue,
+                  ),
+                ),
+              ],
+            ),
+
+            // ACTIONS
+            if (isUpcoming) ...[
+              const SizedBox(height: 18),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                            content: Text("Reschedule requested")),
+                      );
+                    },
+                    child: const Text(
+                      "Reschedule",
+                      style: TextStyle(
+                        color: AppColor.darkBlue,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColor.red,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      elevation: 0,
+                    ),
+                    onPressed: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                            content: Text("Cancellation requested")),
+                      );
+                    },
+                    child: const Text(
+                      "Cancel",
+                      style: TextStyle(
+                        color: AppColor.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  )
+                ],
+              )
+            ]
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ================= STATUS =================
+  Widget _statusBadge(String status, bool isUpcoming) {
+    Color bg;
+    Color text;
+
+    if (status == 'Cancelled') {
+      bg = AppColor.snackBgRed;
+      text = AppColor.red;
+    } else if (isUpcoming) {
+      bg = AppColor.snackBgGreen;
+      text = AppColor.snackGreen;
+    } else {
+      bg = AppColor.lightGrey;
+      text = AppColor.grey;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Text(
+        status,
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+          color: text,
+        ),
       ),
     );
   }

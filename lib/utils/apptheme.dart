@@ -97,7 +97,7 @@ class AppTheme {
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
     colors: [
-      Color.alphaBlend(AppColor.green.withValues(alpha: 0.6), AppColor.white),
+      Color.alphaBlend(AppColor.green.withValues(alpha: 0.6), AppColor.white.withValues(alpha: 0.6)),
       AppColor.welcomeBgColor,
       AppColor.white,
     ],
