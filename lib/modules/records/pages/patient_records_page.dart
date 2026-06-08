@@ -13,25 +13,16 @@ class PatientRecordsPage extends ConsumerWidget {
       child: Container(
         decoration: BoxDecoration(gradient: AppTheme.globalBackgroundGradient),
         child: SafeArea(
+          bottom: false,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Padding(
-                padding: EdgeInsets.all(20),
-                child: Text("Medical Records", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: AppColor.darkBlue)),
-              ),
-              const TabBar(
-                indicatorColor: AppColor.green,
-                labelColor: AppColor.green,
-                unselectedLabelColor: AppColor.grey,
-                indicatorWeight: 3,
-                tabs: [
-                  Tab(text: "Prescriptions"),
-                  Tab(text: "Lab Reports & Files"),
-                ],
-              ),
+              _buildHeader(),
+              _buildTabBar(),
+              const SizedBox(height: 8),
               Expanded(
                 child: TabBarView(
+                  physics: const BouncingScrollPhysics(),
                   children: [
                     _buildPrescriptionsTab(ref),
                     _buildFilesTab(ref),
@@ -45,62 +36,220 @@ class PatientRecordsPage extends ConsumerWidget {
     );
   }
 
+  Widget _buildHeader() {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            AppColor.green.withValues(alpha: 0.1),
+            Colors.transparent,
+          ],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: AppColor.white,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(color: AppColor.darkBlue.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 4)),
+                  ],
+                ),
+                child: const Icon(Icons.folder_shared_rounded, color: AppColor.green, size: 24),
+              ),
+              const SizedBox(width: 16),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text("Medical Records", style: TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: AppColor.darkBlue, letterSpacing: -0.5)),
+                    SizedBox(height: 4),
+                    Text("Access your prescriptions & reports", style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColor.grey)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTabBar() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Container(
+        height: 52,
+        decoration: BoxDecoration(
+          color: AppColor.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(color: AppColor.darkBlue.withValues(alpha: 0.04), blurRadius: 12, offset: const Offset(0, 4)),
+          ],
+          border: Border.all(color: AppColor.lightGrey.withValues(alpha: 0.5)),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(6.0),
+          child: TabBar(
+            dividerColor: Colors.transparent,
+            indicatorSize: TabBarIndicatorSize.tab,
+            indicator: BoxDecoration(
+              color: AppColor.green,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(color: AppColor.green.withValues(alpha: 0.3), blurRadius: 8, offset: const Offset(0, 4)),
+              ],
+            ),
+            labelColor: AppColor.white,
+            unselectedLabelColor: AppColor.grey,
+            labelStyle: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
+            unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+            tabs: const [
+              Tab(text: "Prescriptions"),
+              Tab(text: "Lab Reports"),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildPrescriptionsTab(WidgetRef ref) {
     final asyncData = ref.watch(prescriptionsProvider);
 
     return asyncData.when(
-      loading: () => const Center(child: CircularProgressIndicator(color: AppColor.green)),
-      error: (e, _) => Center(child: Text("Error loading prescriptions: $e")),
+      loading: () => _buildSkeletonLoading(),
+      error: (e, _) => _buildEmptyState("Failed to load", e.toString(), Icons.error_outline_rounded),
       data: (prescriptions) {
-        if (prescriptions.isEmpty) return const Center(child: Text("No prescriptions found."));
-        
+        if (prescriptions.isEmpty) {
+          return _buildEmptyState("No Prescriptions", "You don't have any digital prescriptions yet.", Icons.receipt_long_rounded);
+        }
+
         return ListView.builder(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.fromLTRB(24, 16, 24, 40),
+          physics: const BouncingScrollPhysics(),
           itemCount: prescriptions.length,
           itemBuilder: (context, index) {
             final rx = prescriptions[index];
             final drugs = List<dynamic>.from(rx['drugs'] ?? []);
 
-            return Card(
-              color: AppColor.white,
-              margin: const EdgeInsets.only(bottom: 16),
-              elevation: 0,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: const BorderSide(color: AppColor.lightGrey)),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 20),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: AppColor.white,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(color: AppColor.darkBlue.withValues(alpha: 0.05), blurRadius: 20, offset: const Offset(0, 8)),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(20),
+                  child: Container(
+                    decoration: const BoxDecoration(
+                      border: Border(left: BorderSide(color: AppColor.green, width: 5)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(rx['date'], style: const TextStyle(fontWeight: FontWeight.bold, color: AppColor.green)),
-                        const Icon(Icons.medical_information_rounded, color: AppColor.grey),
+                        Padding(
+                          padding: const EdgeInsets.all(20),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                height: 48, width: 48,
+                                decoration: BoxDecoration(
+                                  color: AppColor.green.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
+                                child: const Icon(Icons.medical_services_rounded, color: AppColor.green),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text("Dr. ${rx['doctor_name']}", style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: AppColor.darkBlue)),
+                                    const SizedBox(height: 4),
+                                    Text(rx['diagnosis'], style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: AppColor.grey)),
+                                  ],
+                                ),
+                              ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: AppColor.welcomeBgColor,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(rx['date'], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: AppColor.darkBlue)),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const Divider(height: 1, color: AppColor.lightGrey),
+                        Padding(
+                          padding: const EdgeInsets.all(20),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text("Prescribed Medicines", style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14, color: AppColor.darkBlue)),
+                              const SizedBox(height: 16),
+                              ...drugs.map((d) => Padding(
+                                padding: const EdgeInsets.only(bottom: 16),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(8),
+                                      decoration: BoxDecoration(color: AppColor.welcomeBgColor, shape: BoxShape.circle),
+                                      child: const Icon(Icons.medication_rounded, size: 16, color: AppColor.green),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(d['name'], style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: AppColor.darkBlue)),
+                                          const SizedBox(height: 8),
+                                          Row(
+                                            children: [
+                                              _buildMedicineChip(Icons.watch_later_outlined, d['dosage']),
+                                              const SizedBox(width: 8),
+                                              _buildMedicineChip(Icons.calendar_month_outlined, d['duration']),
+                                            ],
+                                          )
+                                        ],
+                                      ),
+                                    )
+                                  ],
+                                ),
+                              )),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          decoration: BoxDecoration(
+                            color: AppColor.welcomeBgColor.withValues(alpha: 0.5),
+                            border: const Border(top: BorderSide(color: AppColor.lightGrey)),
+                          ),
+                          child: const Center(
+                            child: Text("View Full Prescription", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppColor.green)),
+                          ),
+                        ),
                       ],
                     ),
-                    const SizedBox(height: 8),
-                    Text("Dr. ${rx['doctor_name']} • ${rx['diagnosis']}", style: const TextStyle(fontWeight: FontWeight.w600, color: AppColor.darkBlue)),
-                    const Divider(height: 24),
-                    ...drugs.map((d) => Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Icon(Icons.medication_rounded, size: 18, color: AppColor.green),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(d['name'], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppColor.darkBlue)),
-                                Text("Take: ${d['dosage']} • For: ${d['duration']}", style: const TextStyle(fontSize: 12, color: AppColor.grey)),
-                              ],
-                            ),
-                          )
-                        ],
-                      ),
-                    )),
-                  ],
+                  ),
                 ),
               ),
             );
@@ -110,42 +259,182 @@ class PatientRecordsPage extends ConsumerWidget {
     );
   }
 
+  Widget _buildMedicineChip(IconData icon, String text) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: AppColor.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColor.lightGrey),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: AppColor.grey),
+          const SizedBox(width: 4),
+          Text(text, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColor.grey)),
+        ],
+      ),
+    );
+  }
+
   Widget _buildFilesTab(WidgetRef ref) {
     final asyncData = ref.watch(emrFilesProvider);
 
     return asyncData.when(
-      loading: () => const Center(child: CircularProgressIndicator(color: AppColor.green)),
-      error: (e, _) => Center(child: Text("Error loading files: $e")),
+      loading: () => _buildSkeletonLoading(),
+      error: (e, _) => _buildEmptyState("Failed to load", e.toString(), Icons.error_outline_rounded),
       data: (files) {
-        if (files.isEmpty) return const Center(child: Text("No files uploaded."));
+        if (files.isEmpty) {
+          return _buildEmptyState("No Files", "Lab reports and documents will appear here.", Icons.folder_open_rounded);
+        }
 
         return ListView.builder(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.fromLTRB(24, 16, 24, 40),
+          physics: const BouncingScrollPhysics(),
           itemCount: files.length,
           itemBuilder: (context, index) {
             final file = files[index];
             final isPdf = file['type'] == 'pdf';
+            final color = isPdf ? AppColor.red : AppColor.darkBlue;
+            final bgColor = isPdf ? AppColor.snackBgRed : AppColor.welcomeBgColor;
 
-            return ListTile(
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              tileColor: AppColor.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: const BorderSide(color: AppColor.lightGrey)),
-              leading: Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(color: isPdf ? AppColor.snackBgRed : AppColor.welcomeBgColor, borderRadius: BorderRadius.circular(8)),
-                child: Icon(isPdf ? Icons.picture_as_pdf_rounded : Icons.image_rounded, color: isPdf ? AppColor.red : AppColor.darkBlue),
-              ),
-              title: Text(file['file_name'], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-              subtitle: Text("Uploaded: ${file['date']}", style: const TextStyle(fontSize: 12, color: AppColor.grey)),
-              trailing: IconButton(
-                icon: const Icon(Icons.download_rounded, color: AppColor.green),
-                onPressed: () {
-                  // TODO: Implement file download logic
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Downloading file...")));
-                },
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: Material(
+                color: AppColor.white,
+                borderRadius: BorderRadius.circular(20),
+                shadowColor: AppColor.darkBlue.withValues(alpha: 0.04),
+                elevation: 10,
+                child: InkWell(
+                  onTap: () {},
+                  borderRadius: BorderRadius.circular(20),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Row(
+                      children: [
+                        Container(
+                          height: 56, width: 56,
+                          decoration: BoxDecoration(color: bgColor, borderRadius: BorderRadius.circular(16)),
+                          child: Icon(isPdf ? Icons.picture_as_pdf_rounded : Icons.image_rounded, color: color, size: 28),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                file['file_name'], 
+                                style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15, color: AppColor.darkBlue),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 6),
+                              Row(
+                                children: [
+                                  Icon(Icons.calendar_today_rounded, size: 12, color: AppColor.grey.withValues(alpha: 0.8)),
+                                  const SizedBox(width: 4),
+                                  Text(file['date'], style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColor.grey)),
+                                  const SizedBox(width: 12),
+                                  Container(width: 4, height: 4, decoration: const BoxDecoration(color: AppColor.lightGrey, shape: BoxShape.circle)),
+                                  const SizedBox(width: 12),
+                                  Text("1.2 MB", style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColor.grey)),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        IconButton(
+                          icon: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: AppColor.green.withValues(alpha: 0.1),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.file_download_outlined, color: AppColor.green, size: 20),
+                          ),
+                          onPressed: () {
+                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Downloading file...")));
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ),
             );
           },
+        );
+      },
+    );
+  }
+
+  Widget _buildEmptyState(String title, String subtitle, IconData icon) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: AppColor.white,
+                shape: BoxShape.circle,
+                boxShadow: [BoxShadow(color: AppColor.darkBlue.withValues(alpha: 0.05), blurRadius: 20, offset: const Offset(0, 8))],
+              ),
+              child: Icon(icon, size: 48, color: AppColor.green),
+            ),
+            const SizedBox(height: 24),
+            Text(title, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: AppColor.darkBlue)),
+            const SizedBox(height: 8),
+            Text(subtitle, textAlign: TextAlign.center, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: AppColor.grey, height: 1.5)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSkeletonLoading() {
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: 3,
+      itemBuilder: (context, index) {
+        return Container(
+          margin: const EdgeInsets.only(bottom: 20),
+          height: 160,
+          decoration: BoxDecoration(
+            color: AppColor.white.withValues(alpha: 0.6),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: AppColor.lightGrey.withValues(alpha: 0.5)),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(height: 48, width: 48, decoration: BoxDecoration(color: AppColor.lightGrey.withValues(alpha: 0.5), borderRadius: BorderRadius.circular(14))),
+                    const SizedBox(width: 16),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(height: 14, width: 120, decoration: BoxDecoration(color: AppColor.lightGrey.withValues(alpha: 0.5), borderRadius: BorderRadius.circular(4))),
+                        const SizedBox(height: 8),
+                        Container(height: 12, width: 80, decoration: BoxDecoration(color: AppColor.lightGrey.withValues(alpha: 0.5), borderRadius: BorderRadius.circular(4))),
+                      ],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                Container(height: 12, width: double.infinity, decoration: BoxDecoration(color: AppColor.lightGrey.withValues(alpha: 0.5), borderRadius: BorderRadius.circular(4))),
+                const SizedBox(height: 12),
+                Container(height: 12, width: 200, decoration: BoxDecoration(color: AppColor.lightGrey.withValues(alpha: 0.5), borderRadius: BorderRadius.circular(4))),
+              ],
+            ),
+          ),
         );
       },
     );

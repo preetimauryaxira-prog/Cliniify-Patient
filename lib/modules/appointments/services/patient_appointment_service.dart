@@ -11,10 +11,9 @@ class PatientAppointmentService {
     try {
       final activePatient = HiveUser.getActivePatient();
       final patientId = activePatient?['id'];
-
-      // ==========================================
-      // TODO: UNCOMMENT THIS WHEN BACKEND IS READY
-      // ==========================================
+      if (patientId == null) {
+        throw Exception('No active patient found');
+      }
       /*
       final Response response = await _dioClient.get(
         PatientEndpoints.getPatientAppointments,
@@ -65,21 +64,14 @@ class PatientAppointmentService {
 
   Future<bool> bookAppointment(Map<String, dynamic> apptData) async {
     try {
-      // ==========================================
-      // TODO: UNCOMMENT THIS WHEN BACKEND IS READY
-      // ==========================================
       /*
       // Adjust '/api/patient/book/' to your real booking endpoint
       final Response response = await _dioClient.post('/api/patient/book/', data: apptData);
       return response.statusCode == 200 || response.statusCode == 201;
       */
 
-      // ==========================================
-      // DEV BYPASS: MOCK SUCCESSFUL BOOKING
-      // ==========================================
       await Future.delayed(const Duration(seconds: 1));
       return true;
-      // ==========================================
 
     } catch (e) {
       throw Exception('Failed to book appointment: $e');
