@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'modules/billing/pages/patient_billing_page.dart';
 import 'modules/gallery/pages/clinic_gallery_page.dart';
 import 'modules/home/pages/book_appointment_page.dart';
+import 'modules/home/pages/dashboard/pages/dashboard_page.dart';
 import 'modules/notification/pages/notifications_page.dart';
 import 'modules/treatments/pages/patient_treatments_page.dart';
 import 'utils/apptheme.dart';
@@ -17,9 +18,6 @@ import 'modules/auth/pages/otp_verification_page.dart';
 import 'modules/auth/pages/pin_setup_page.dart';
 import 'modules/auth/pages/pin_login_page.dart';
 import 'modules/auth/pages/clinic_selection_page.dart';
-
-import 'modules/home/pages/dashboard_page.dart';
-
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

@@ -20,7 +20,10 @@ class _PatientProfilePageState extends ConsumerState<PatientProfilePage> {
     Navigator.pop(context);
 
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text("Switched to ${selectedPatient['full_name'] ?? selectedPatient['name']}", style: const TextStyle(fontWeight: FontWeight.bold)),
+      content: Text(
+        "Switched to ${selectedPatient['full_name'] ?? selectedPatient['name']}",
+        style: const TextStyle(fontWeight: FontWeight.bold),
+      ),
       backgroundColor: AppColor.green,
       behavior: SnackBarBehavior.floating,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -59,12 +62,19 @@ class _PatientProfilePageState extends ConsumerState<PatientProfilePage> {
               const SizedBox(height: 24),
               const Text(
                 "Switch Profile",
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: AppColor.darkBlue, letterSpacing: -0.5),
+                style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w900,
+                    color: AppColor.darkBlue,
+                    letterSpacing: -0.5),
               ),
               const SizedBox(height: 6),
               const Text(
                 "Select a family member account to manage",
-                style: TextStyle(fontSize: 14, color: AppColor.grey, fontWeight: FontWeight.w500),
+                style: TextStyle(
+                    fontSize: 14,
+                    color: AppColor.grey,
+                    fontWeight: FontWeight.w500),
               ),
               const SizedBox(height: 24),
               ...linkedPatients.map((patientMap) {
@@ -74,18 +84,23 @@ class _PatientProfilePageState extends ConsumerState<PatientProfilePage> {
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 12),
                   child: Material(
-                    color: isActive ? AppColor.green.withValues(alpha: 0.05) : AppColor.white,
+                    color: isActive
+                        ? AppColor.green.withValues(alpha: 0.05)
+                        : AppColor.white,
                     borderRadius: BorderRadius.circular(20),
                     child: InkWell(
                       onTap: isActive ? null : () => _switchProfile(patient),
                       borderRadius: BorderRadius.circular(20),
-                      splashColor: AppColor.green.withValues(alpha: 0.1),
-                      highlightColor: AppColor.green.withValues(alpha: 0.05),
                       child: Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: isActive ? AppColor.green.withValues(alpha: 0.5) : AppColor.lightGrey.withValues(alpha: 0.6), width: isActive ? 1.5 : 1),
+                          border: Border.all(
+                            color: isActive
+                                ? AppColor.green
+                                : AppColor.lightGrey.withValues(alpha: 0.6),
+                            width: isActive ? 1.5 : 1,
+                          ),
                         ),
                         child: Row(
                           children: [
@@ -93,10 +108,18 @@ class _PatientProfilePageState extends ConsumerState<PatientProfilePage> {
                               height: 50,
                               width: 50,
                               decoration: BoxDecoration(
-                                color: isActive ? AppColor.green : AppColor.green.withValues(alpha: 0.1),
-                                shape: BoxShape.circle,
+                                color: isActive
+                                    ? AppColor.green
+                                    : AppColor.welcomeBgColor,
+                                borderRadius: BorderRadius.circular(14),
                               ),
-                              child: Icon(Icons.person_rounded, color: isActive ? AppColor.white : AppColor.green, size: 26),
+                              child: Icon(
+                                Icons.person_rounded,
+                                color: isActive
+                                    ? AppColor.white
+                                    : AppColor.darkBlue.withValues(alpha: 0.5),
+                                size: 26,
+                              ),
                             ),
                             const SizedBox(width: 16),
                             Expanded(
@@ -104,30 +127,35 @@ class _PatientProfilePageState extends ConsumerState<PatientProfilePage> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    patient['full_name'] ?? patient['name'] ?? 'Unknown',
-                                    style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: isActive ? AppColor.green : AppColor.darkBlue),
+                                    patient['full_name'] ??
+                                        patient['name'] ??
+                                        'Unknown',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w800,
+                                      fontSize: 16,
+                                      color: isActive
+                                          ? AppColor.green
+                                          : AppColor.darkBlue,
+                                    ),
                                   ),
                                   const SizedBox(height: 4),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                    decoration: BoxDecoration(
-                                      color: isActive ? AppColor.green.withValues(alpha: 0.1) : AppColor.welcomeBgColor,
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Text(
-                                      patient['relation'] ?? 'Patient',
-                                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: isActive ? AppColor.green : AppColor.grey),
+                                  Text(
+                                    patient['relation'] ?? 'Patient',
+                                    style: const TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                      color: AppColor.grey,
                                     ),
                                   ),
                                 ],
                               ),
                             ),
                             if (isActive)
-                              Container(
-                                padding: const EdgeInsets.all(6),
-                                decoration: BoxDecoration(color: AppColor.green.withValues(alpha: 0.1), shape: BoxShape.circle),
-                                child: const Icon(Icons.check_circle_rounded, color: AppColor.green, size: 24),
-                              ),
+                              const Icon(Icons.check_circle_rounded,
+                                  color: AppColor.green, size: 24)
+                            else
+                              const Icon(Icons.arrow_forward_ios_rounded,
+                                  color: AppColor.grey, size: 16),
                           ],
                         ),
                       ),
@@ -144,26 +172,40 @@ class _PatientProfilePageState extends ConsumerState<PatientProfilePage> {
 
   void _logout() {
     HiveUser.logout();
-    Navigator.pushNamedAndRemoveUntil(context, MobileLoginPage.routerName, (route) => false);
+    Navigator.pushNamedAndRemoveUntil(
+        context, MobileLoginPage.routerName, (route) => false);
   }
 
   @override
   Widget build(BuildContext context) {
     final activePatient = HiveUser.getActivePatient();
     final linkedPatients = HiveUser.getLinkedPatients();
-    final String patientName = activePatient?['full_name'] ?? activePatient?['name'] ?? 'User';
+    final String patientName =
+        activePatient?['full_name'] ?? activePatient?['name'] ?? 'Preeti';
 
     return Container(
       decoration: BoxDecoration(gradient: AppTheme.globalBackgroundGradient),
-      child: SafeArea(
-        bottom: false,
-        child: ListView(
-          padding: const EdgeInsets.only(bottom: 40),
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          elevation: 0,
+          backgroundColor: Colors.transparent,
+          centerTitle: true,
+          title: const Text(
+            "Profile",
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w700,
+              color: AppColor.darkBlue,
+            ),
+          ),
+        ),
+        body: ListView(
+          padding: const EdgeInsets.only(bottom: 120, top: 8),
           physics: const BouncingScrollPhysics(),
           children: [
-            _buildHeader(patientName),
-            const SizedBox(height: 24),
-            _buildActiveProfileCard(activePatient, linkedPatients.length > 1),
+            _buildActiveProfileCard(
+                activePatient, patientName, linkedPatients.length > 1),
             const SizedBox(height: 32),
             _buildAccountOptions(),
             const SizedBox(height: 32),
@@ -174,145 +216,102 @@ class _PatientProfilePageState extends ConsumerState<PatientProfilePage> {
     );
   }
 
-  Widget _buildHeader(String patientName) {
+  Widget _buildActiveProfileCard(
+      Map<dynamic, dynamic>? activePatient, String patientName, bool showSwitchBtn) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+      margin: const EdgeInsets.symmetric(horizontal: 20),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [AppColor.green.withValues(alpha: 0.1), Colors.transparent],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-        ),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text("Hello,", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppColor.grey)),
-                const SizedBox(height: 4),
-                Text(
-                  patientName,
-                  style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w900, color: AppColor.darkBlue, letterSpacing: -0.5),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 4),
-                const Text("Manage your health profile", style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColor.grey)),
-              ],
-            ),
-          ),
-          // Container(
-          //   padding: const EdgeInsets.all(12),
-          //   decoration: BoxDecoration(
-          //     color: AppColor.white,
-          //     shape: BoxShape.circle,
-          //     boxShadow: [BoxShadow(color: AppColor.darkBlue.withValues(alpha: 0.05), blurRadius: 12, offset: const Offset(0, 4))],
-          //   ),
-          //   child: const Icon(Icons.settings_outlined, color: AppColor.darkBlue, size: 24),
-          // ),
+        color: AppColor.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: AppColor.darkBlue.withValues(alpha: 0.05),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
+          )
         ],
       ),
-    );
-  }
-
-  Widget _buildActiveProfileCard(Map<dynamic, dynamic>? activePatient, bool showSwitchBtn) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: Container(
-        decoration: BoxDecoration(
-          color: AppColor.white,
-          borderRadius: BorderRadius.circular(24),
-          boxShadow: [BoxShadow(color: AppColor.darkBlue.withValues(alpha: 0.06), blurRadius: 24, offset: const Offset(0, 10))],
-          border: Border.all(color: AppColor.green.withValues(alpha: 0.2), width: 1.5),
-        ),
-        child: Stack(
-          children: [
-            Positioned(
-              right: -20,
-              top: -20,
-              child: Container(
-                width: 100,
-                height: 100,
-                decoration: BoxDecoration(shape: BoxShape.circle, color: AppColor.green.withValues(alpha: 0.05)),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                children: [
-                  Row(
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Row(
+              children: [
+                Container(
+                  height: 64,
+                  width: 64,
+                  decoration: BoxDecoration(
+                    color: AppColor.green.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.person_rounded,
+                      size: 32, color: AppColor.green),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Container(
-                        height: 72,
-                        width: 72,
-                        decoration: BoxDecoration(
-                          color: AppColor.green.withValues(alpha: 0.1),
-                          shape: BoxShape.circle,
-                          border: Border.all(color: AppColor.green.withValues(alpha: 0.3), width: 2),
+                      Text(
+                        patientName,
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w800,
+                          color: AppColor.darkBlue,
+                          letterSpacing: -0.5,
                         ),
-                        child: const Icon(Icons.person_rounded, size: 36, color: AppColor.green),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(width: 20),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(color: AppColor.green.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
-                              child: const Text("ACTIVE PROFILE", style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: AppColor.green, letterSpacing: 0.5)),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              activePatient?['full_name'] ?? activePatient?['name'] ?? 'Unknown User',
-                              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: AppColor.darkBlue, letterSpacing: -0.5),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            const SizedBox(height: 6),
-                            Row(
-                              children: [
-                                _buildInfoChip(Icons.badge_rounded, "ID: ${activePatient?['patient_id'] ?? activePatient?['id'] ?? 'N/A'}"),
-                                const SizedBox(width: 8),
-                                if (activePatient != null && activePatient['relation'] != null)
-                                  _buildInfoChip(Icons.family_restroom_rounded, activePatient['relation']),
-                              ],
-                            ),
-                          ],
-                        ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          _buildInfoChip(
+                              Icons.badge_rounded,
+                              "ID: ${activePatient?['patient_id'] ?? activePatient?['id'] ?? 'N/A'}"),
+                          const SizedBox(width: 8),
+                          if (activePatient != null &&
+                              activePatient['relation'] != null)
+                            _buildInfoChip(Icons.family_restroom_rounded,
+                                activePatient['relation']),
+                        ],
                       ),
                     ],
                   ),
-                  if (showSwitchBtn) ...[
-                    const SizedBox(height: 24),
-                    const Divider(height: 1, color: AppColor.lightGrey),
-                    const SizedBox(height: 16),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 48,
-                      child: OutlinedButton.icon(
-                        onPressed: _showSwitchProfileSheet,
-                        icon: const Icon(Icons.swap_horiz_rounded, size: 20),
-                        label: const Text("Switch Profile", style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800)),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: AppColor.green,
-                          side: const BorderSide(color: AppColor.green, width: 1.5),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                          backgroundColor: AppColor.green.withValues(alpha: 0.05),
-                          elevation: 0,
-                        ),
+                ),
+              ],
+            ),
+          ),
+          if (showSwitchBtn) ...[
+            const Divider(height: 1, color: AppColor.welcomeBgColor, thickness: 1.5),
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: _showSwitchProfileSheet,
+                borderRadius:
+                    const BorderRadius.vertical(bottom: Radius.circular(24)),
+                child: const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 16),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.swap_horiz_rounded,
+                          size: 20, color: AppColor.green),
+                      SizedBox(width: 8),
+                      Text(
+                        "Switch Profile",
+                        style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: AppColor.green),
                       ),
-                    ),
-                  ],
-                ],
+                    ],
+                  ),
+                ),
               ),
             ),
           ],
-        ),
+        ],
       ),
     );
   }
@@ -322,78 +321,95 @@ class _PatientProfilePageState extends ConsumerState<PatientProfilePage> {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: AppColor.welcomeBgColor,
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: AppColor.lightGrey),
+        borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 12, color: AppColor.grey),
           const SizedBox(width: 4),
-          Text(text, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColor.grey)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAccountOptions() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text("Account Settings", style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: AppColor.darkBlue)),
-          const SizedBox(height: 16),
-          Container(
-            decoration: BoxDecoration(
-              color: AppColor.white,
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [BoxShadow(color: AppColor.darkBlue.withValues(alpha: 0.04), blurRadius: 16, offset: const Offset(0, 6))],
-              border: Border.all(color: AppColor.lightGrey.withValues(alpha: 0.5)),
-            ),
-            child: Column(
-              children: [
-                _buildOptionTile(Icons.person_outline_rounded, "Personal Information", "Edit details and demographics", true),
-                const Divider(height: 1, color: AppColor.lightGrey, indent: 64),
-                _buildOptionTile(Icons.security_rounded, "Security & PIN", "Update your login PIN", true),
-                const Divider(height: 1, color: AppColor.lightGrey, indent: 64),
-                _buildOptionTile(Icons.support_agent_rounded, "Help & Support", "Contact clinic for assistance", false),
-              ],
-            ),
+          Text(
+            text,
+            style: const TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: AppColor.grey),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildOptionTile(IconData icon, String title, String subtitle, bool isTop) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () {},
-        borderRadius: BorderRadius.vertical(top: Radius.circular(isTop ? 20 : 0), bottom: Radius.circular(!isTop ? 20 : 0)),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(color: AppColor.welcomeBgColor, borderRadius: BorderRadius.circular(12)),
-                child: Icon(icon, color: AppColor.darkBlue, size: 22),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(title, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15, color: AppColor.darkBlue)),
-                    const SizedBox(height: 2),
-                    Text(subtitle, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12, color: AppColor.grey)),
-                  ],
+  Widget _buildAccountOptions() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+          child: Text(
+            "Account Settings",
+            style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: AppColor.grey,
+                letterSpacing: 0.5),
+          ),
+        ),
+        _buildOptionTile(
+            Icons.person_outline_rounded, "Personal Information", true),
+        _buildOptionTile(Icons.security_rounded, "Security & PIN", true),
+        _buildOptionTile(Icons.support_agent_rounded, "Help & Support", false),
+      ],
+    );
+  }
+
+  Widget _buildOptionTile(IconData icon, String title, bool showDivider) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+      decoration: BoxDecoration(
+        color: AppColor.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: AppColor.darkBlue.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () {},
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              children: [
+                Container(
+                  height: 40,
+                  width: 40,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: AppColor.green.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(icon, color: AppColor.green, size: 22),
                 ),
-              ),
-              const Icon(Icons.arrow_forward_ios_rounded, color: AppColor.grey, size: 14),
-            ],
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                        color: AppColor.darkBlue),
+                  ),
+                ),
+                const Icon(Icons.chevron_right_rounded,
+                    color: AppColor.grey, size: 24),
+              ],
+            ),
           ),
         ),
       ),
@@ -401,40 +417,49 @@ class _PatientProfilePageState extends ConsumerState<PatientProfilePage> {
   }
 
   Widget _buildLogoutSection() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: Material(
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20),
+      decoration: BoxDecoration(
         color: AppColor.white,
-        borderRadius: BorderRadius.circular(20),
-        shadowColor: AppColor.darkBlue.withValues(alpha: 0.04),
-        elevation: 8,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: AppColor.red.withValues(alpha: 0.08),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
         child: InkWell(
           onTap: _logout,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(16),
           splashColor: AppColor.red.withValues(alpha: 0.1),
           highlightColor: AppColor.red.withValues(alpha: 0.05),
-          child: Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: AppColor.red.withValues(alpha: 0.2)),
-            ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             child: Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(color: AppColor.red.withValues(alpha: 0.1), shape: BoxShape.circle),
-                  child: const Icon(Icons.logout_rounded, color: AppColor.red, size: 24),
+                  height: 40,
+                  width: 40,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: AppColor.red.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(Icons.logout_rounded,
+                      color: AppColor.red, size: 22),
                 ),
                 const SizedBox(width: 16),
                 const Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text("Logout", style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: AppColor.red)),
-                      SizedBox(height: 2),
-                      Text("Securely sign out of your account", style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12, color: AppColor.grey)),
-                    ],
+                  child: Text(
+                    "Logout",
+                    style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                        color: AppColor.red),
                   ),
                 ),
               ],

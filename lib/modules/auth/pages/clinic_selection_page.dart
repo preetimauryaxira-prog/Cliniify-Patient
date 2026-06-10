@@ -2,7 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import '../../../utils/apptheme.dart';
 import '../../../utils/hive_config.dart';
-import '../../home/pages/dashboard_page.dart';
+import '../../home/pages/dashboard/pages/dashboard_page.dart';
 
 class ClinicSelectionPage extends StatelessWidget {
   const ClinicSelectionPage({super.key});

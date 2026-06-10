@@ -6,6 +6,7 @@ import '../../../utils/hive_config.dart';
 import '../providers/auth_provider.dart';
 import 'pin_setup_page.dart';
 import 'clinic_selection_page.dart';
+import '../widgets/leafboard_header_painter.dart'; // Import custom painter here
 
 class MobileLoginPage extends ConsumerStatefulWidget {
   const MobileLoginPage({super.key});
@@ -22,39 +23,29 @@ class _MobileLoginPageState extends ConsumerState<MobileLoginPage> {
 
   void _login() async {
     if (!_formKey.currentState!.validate()) return;
-
     ref.read(authLoadingProvider.notifier).state = true;
     final mobile = _mobileController.text.trim();
 
     try {
-      final responseData =
-          await ref.read(patientAuthProvider).loginWithMobile(mobile);
-
+      final responseData = await ref.read(patientAuthProvider).loginWithMobile(mobile);
       HiveUser.saveAuthToken(responseData['token']);
 
-      final linkedPatients =
-          List<dynamic>.from(responseData['linked_patients'] ?? []);
+      final linkedPatients = List<dynamic>.from(responseData['linked_patients'] ?? []);
       if (linkedPatients.isNotEmpty) {
         HiveUser.saveLinkedPatients(linkedPatients);
-        HiveUser.saveActivePatient(
-            Map<String, dynamic>.from(linkedPatients.first));
+        HiveUser.saveActivePatient(Map<String, dynamic>.from(linkedPatients.first));
       }
 
-      final clinics =
-          List<Map<String, dynamic>>.from(responseData['clinics'] ?? []);
+      final clinics = List<Map<String, dynamic>>.from(responseData['clinics'] ?? []);
       HiveUser.saveAllClinics(clinics);
 
       if (!mounted) return;
       ref.read(authLoadingProvider.notifier).state = false;
 
       if (!HiveUser.hasPin()) {
-        Navigator.pushNamedAndRemoveUntil(
-            context, PinSetupPage.routerName, (route) => false,
-            arguments: clinics);
+        Navigator.pushNamedAndRemoveUntil(context, PinSetupPage.routerName, (route) => false, arguments: clinics);
       } else {
-        Navigator.pushNamedAndRemoveUntil(
-            context, ClinicSelectionPage.routerName, (route) => false,
-            arguments: clinics);
+        Navigator.pushNamedAndRemoveUntil(context, ClinicSelectionPage.routerName, (route) => false, arguments: clinics);
       }
     } catch (e) {
       if (!mounted) return;
@@ -69,255 +60,224 @@ class _MobileLoginPageState extends ConsumerState<MobileLoginPage> {
   }
 
   @override
+  void dispose() {
+    _mobileController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final isLoading = ref.watch(authLoadingProvider);
+    final Size size = MediaQuery.of(context).size;
 
     return Scaffold(
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: BoxDecoration(gradient: AppTheme.globalBackgroundGradient),
-        child: SafeArea(
-          child: Center(
-            child: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  _buildTopIllustration(),
-                  const SizedBox(height: 32),
-                  _buildLoginCard(isLoading),
-                  const SizedBox(height: 32),
-                  _buildFooterText(),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTopIllustration() {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: AppColor.white,
-        shape: BoxShape.circle,
-        boxShadow: [
-          BoxShadow(
-            color: AppColor.green.withValues(alpha: 0.15),
-            blurRadius: 30,
-            spreadRadius: 5,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      child: const Icon(
-        Icons.health_and_safety_rounded,
-        size: 72,
-        color: AppColor.green,
-      ),
-    );
-  }
-
-  Widget _buildLoginCard(bool isLoading) {
-    return Container(
-      padding: const EdgeInsets.all(32.0),
-      decoration: BoxDecoration(
-        color: AppColor.white,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: AppColor.darkBlue.withValues(alpha: 0.06),
-            blurRadius: 24,
-            spreadRadius: 2,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Form(
-        key: _formKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const Text(
-              "Welcome to Cliniify",
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 26,
-                fontWeight: FontWeight.w800,
-                color: AppColor.darkBlue,
-                letterSpacing: -0.5,
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              "Enter your registered mobile number to access your healthcare portal.",
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
-                color: AppColor.grey,
-                height: 1.4,
-              ),
-            ),
-            const SizedBox(height: 36),
-            const Text(
-              "Mobile Number",
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-                color: AppColor.darkBlue,
-              ),
-            ),
-            const SizedBox(height: 8),
-            TextFormField(
-              controller: _mobileController,
-              keyboardType: TextInputType.phone,
-              maxLength: 10,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: AppColor.darkBlue,
-                letterSpacing: 1.5,
-              ),
-              decoration: InputDecoration(
-                counterText: "",
-                filled: true,
-                fillColor: AppColor.welcomeBgColor,
-                contentPadding: const EdgeInsets.symmetric(vertical: 18),
-                prefixIcon: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const SizedBox(width: 16),
-                    const Icon(Icons.phone_rounded,
-                        color: AppColor.green, size: 20),
-                    const SizedBox(width: 4),
-                    DropdownButtonHideUnderline(
-                      child: DropdownButton<String>(
-                        value: _selectedCountryCode,
-                        icon: const Icon(Icons.keyboard_arrow_down_rounded,
-                            color: AppColor.darkBlue, size: 20),
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: AppColor.darkBlue,
-                        ),
-                        // Adjust dropdown background color if needed
-                        dropdownColor: AppColor.welcomeBgColor,
-                        items: const [
-                          DropdownMenuItem(
-                            value: '+91',
-                            child: Text('🇮🇳 +91'),
+      backgroundColor: AppColor.white,
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          return SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: IntrinsicHeight(
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Curved Minimal Header Section
+                      Stack(
+                        clipBehavior: Clip.none,
+                        alignment: Alignment.center,
+                        children: [
+                          CustomPaint(
+                            size: Size(size.width, size.height * 0.36),
+                            painter: const LeafboardHeaderPainter(),
                           ),
-                          DropdownMenuItem(
-                            value: '+1',
-                            child: Text('🇨🇦 +1'),
-                          ),
+                          Positioned(
+                            bottom: -80,
+                            child: Container(
+                              height: 200,
+                              width: 150,
+                              decoration: BoxDecoration(
+                                color: AppColor.white,
+                                shape: BoxShape.circle,
+                                border: Border.all(color: AppColor.black.withValues(alpha: 0.3), width: 1),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: AppColor.darkBlue.withValues(alpha: 0.3),
+                                    blurRadius: 16,
+                                    offset: const Offset(0, 8),
+                                  )
+                                ],
+                              ),
+                              child: Center(
+                                child: Padding(
+                                  padding: const EdgeInsets.all(16.0), // Adds padding inside the white circle so your logo doesn't touch the edges
+                                  child: Image.asset(
+                                    'assets/images/logo.png', // path to your logo
+                                    fit: BoxFit.contain,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          )
                         ],
-                        onChanged: (String? newValue) {
-                          if (newValue != null) {
-                            setState(() {
-                              _selectedCountryCode = newValue;
-                            });
-                          }
-                        },
                       ),
-                    ),
+                      const SizedBox(height: 100),
+                      
+                      // Central Header Titles
+                      const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 24.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "Cliniify Patient Login",
+                              style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800, color: AppColor.darkBlue, letterSpacing: -0.5),
+                            ),
+                            SizedBox(height: 6),
+                            Text(
+                              "Login to get medical insights, book appointments, and manage your health with ease.",
+                              style: TextStyle(fontSize: 14, color: AppColor.grey, fontWeight: FontWeight.w500),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 40),
 
-                    const SizedBox(width: 8),
-                    Container(
-                      height: 24,
-                      width: 1.5,
-                      color: AppColor.grey.withValues(alpha: 0.3),
-                    ),
-                    const SizedBox(width: 12),
-                  ],
-                ),
-                hintText: "00000 00000",
-                hintStyle: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w400,
-                  color: AppColor.grey.withValues(alpha: 0.5),
-                  letterSpacing: 1.5,
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide.none,
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide:
-                      const BorderSide(color: AppColor.green, width: 1.5),
-                ),
-                errorBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: const BorderSide(color: AppColor.red, width: 1.2),
-                ),
-                focusedErrorBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: const BorderSide(color: AppColor.red, width: 1.5),
-                ),
-              ),
-              validator: (val) {
-                if (val == null || val.isEmpty) {
-                  return "Mobile number is required";
-                }
-                if (val.length < 10) return "Enter a valid 10-digit number";
-                return null;
-              },
-            ),
-            const SizedBox(height: 32),
-            SizedBox(
-              height: 56,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColor.green,
-                  foregroundColor: AppColor.white,
-                  elevation: 4,
-                  shadowColor: AppColor.green.withValues(alpha: 0.4),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
+                      // Input Fields Block
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              "Mobile/Phone:",
+                              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColor.darkBlue),
+                            ),
+                            const SizedBox(height: 10),
+                            TextFormField(
+                              controller: _mobileController,
+                              keyboardType: TextInputType.phone,
+                              maxLength: 10,
+                              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppColor.darkBlue),
+                              decoration: InputDecoration(
+                                counterText: "",
+                                filled: true,
+                                fillColor: AppColor.white,
+                                contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                                prefixIcon: _buildCountryCodePicker(),
+                                hintText: "00000 00000",
+                                hintStyle: TextStyle(fontSize: 15, color: AppColor.grey.withValues(alpha: 0.4)),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(50),
+                                  borderSide: BorderSide(color: AppColor.lightGrey.withValues(alpha: 0.8), width: 1.5),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(50),
+                                  borderSide: const BorderSide(color: AppColor.green, width: 1.5),
+                                ),
+                                errorBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(50),
+                                  borderSide: const BorderSide(color: AppColor.red, width: 1.2),
+                                ),
+                                focusedErrorBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(50),
+                                  borderSide: const BorderSide(color: AppColor.red, width: 1.5),
+                                ),
+                              ),
+                              validator: (val) {
+                                if (val == null || val.isEmpty) return "Mobile number is required";
+                                if (val.length < 10) return "Enter a valid 10-digit number";
+                                return null;
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                      
+                      const Spacer(),
+                      
+                      // Submit Button Anchor Section
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16),
+                        child: ValueListenableBuilder<TextEditingValue>(
+                          valueListenable: _mobileController,
+                          builder: (context, value, child) {
+                            final bool isValidInput = value.text.length == 10;
+                            return SizedBox(
+                              width: double.infinity,
+                              height: 52,
+                              child: ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: isValidInput ? AppColor.green : AppColor.lightGrey.withValues(alpha: 0.6),
+                                  foregroundColor: AppColor.white,
+                                  elevation: 0,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(50)),
+                                ),
+                                onPressed: (isLoading || !isValidInput) ? null : _login,
+                                child: isLoading
+                                    ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: AppColor.white, strokeWidth: 2.5))
+                                    : const Row(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Text("Continue", style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+                                          SizedBox(width: 8),
+                                          Icon(Icons.arrow_forward_ios_rounded, size: 14),
+                                        ],
+                                      ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      _buildFooterText(),
+                    ],
                   ),
                 ),
-                onPressed: isLoading ? null : _login,
-                child: isLoading
-                    ? const SizedBox(
-                        height: 24,
-                        width: 24,
-                        child: CircularProgressIndicator(
-                            color: AppColor.white, strokeWidth: 3),
-                      )
-                    : const Text(
-                        "Continue",
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
               ),
             ),
-          ],
-        ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildCountryCodePicker() {
+    return Padding(
+      padding: const EdgeInsets.only(left: 16.0, right: 8.0),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          DropdownButtonHideUnderline(
+            child: DropdownButton<String>(
+              value: _selectedCountryCode,
+              icon: const Icon(Icons.keyboard_arrow_down_rounded, color: AppColor.grey, size: 18),
+              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppColor.darkBlue),
+              items: const [
+                DropdownMenuItem(value: '+91', child: Text('🇮🇳 +91')),
+                DropdownMenuItem(value: '+1', child: Text('🇨🇦 +1')),
+              ],
+              onChanged: (String? newValue) {
+                if (newValue != null) setState(() => _selectedCountryCode = newValue);
+              },
+            ),
+          ),
+          const SizedBox(width: 4),
+          Container(height: 18, width: 1, color: AppColor.lightGrey),
+        ],
       ),
     );
   }
 
   Widget _buildFooterText() {
-    return const Padding(
-      padding: EdgeInsets.symmetric(horizontal: 16.0),
-      child: Text(
-        "By continuing, you agree to our Terms of Service\n& Privacy Policy.",
-        textAlign: TextAlign.center,
-        style: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w500,
-          color: AppColor.grey,
-          height: 1.5,
+    return const Center(
+      child: Padding(
+        padding: EdgeInsets.only(bottom: 24.0),
+        child: Text(
+          "By continuing, you agree to our Terms of Service & Privacy Policy.",
+          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: AppColor.grey),
         ),
       ),
     );
